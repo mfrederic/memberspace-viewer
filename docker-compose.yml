@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:latest
+    environment:
+      - VIRTUAL_HOST=membership.frederic-maury.com
+      - VIRTUAL_PORT=9050
+      - LETSENCRYPT_HOST=membership.frederic-maury.com
+      - LETSENCRYPT_EMAIL=contact@frederic-maury.com
+    volumes:
+      - /home/github-actions/websites/membership/nginx/:/etc/nginx:ro
+      - /home/github-actions/websites/membership/dist:/usr/share/nginx/html:ro
+    ports:
+      - 9050:80
+    restart: always
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: nginx-proxy_tier
