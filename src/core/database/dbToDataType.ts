@@ -16,7 +16,14 @@ export function dbToDataType(
           (membership) => membership.id === personMembership.membershipId,
         );
         if (membership) {
-          if (!lastPlan || dayjs(lastPlan.date).isBefore(personMembership.endDate)) {
+          if (person.lastname.includes('Sierra Ebratt')) {
+            debugger;
+          }
+          if (
+            !lastPlan
+            || (dayjs(lastPlan.date).isBefore(personMembership.endDate) && personMembership.status === 'active')
+            || (personMembership.status === 'active' && lastPlan.status !== 'active')
+          ) {
             console.log('lastPlan', lastPlan, personMembership)
             lastPlan = {
               className: membership.name.toLowerCase(),

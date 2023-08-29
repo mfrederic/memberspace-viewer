@@ -37,10 +37,10 @@ onMounted(async () => {
     }));
   memberships.value.sort((a, b) => {
     if (!a.isActive) {
-      return -1;
+      return 1;
     }
     if (!b.isActive) {
-      return 1;
+      return -1;
     }
     if (!dayjs(a.endDate).isValid()) {
       return 1;

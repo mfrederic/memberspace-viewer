@@ -38,11 +38,17 @@ export function csvToDataType(data: Record<string, string>[]): DataType[] {
       }
     });
     (current.plans as ClassItem[]).sort((a, b) => {
-      if (!a.date) {
+      if (a.status !== 'active') {
+        return 1;
+      }
+      if (b.status !== 'active') {
         return -1;
       }
-      if (!b.date) {
+      if (!dayjs(a.date).isValid()) {
         return 1;
+      }
+      if (!dayjs(b.date).isValid()) {
+        return -1;
       }
       return dayjs(a.date, "YYYY-MM-DD HH:mm").isBefore(
         dayjs(b.date, "YYYY-MM-DD HH:mm"),
