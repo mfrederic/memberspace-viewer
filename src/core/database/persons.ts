@@ -8,4 +8,5 @@ export interface Person {
   mailingList: boolean;
   address: string;
   dancerName: string;
+  creationDate: Date;
 }

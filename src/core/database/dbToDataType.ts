@@ -45,6 +45,7 @@ export function dbToDataType(
       dancerName: person.dancerName,
       plans: memberships,
       toExpiration: lastPlan,
+      creationDate: person.creationDate,
     };
   });
 }

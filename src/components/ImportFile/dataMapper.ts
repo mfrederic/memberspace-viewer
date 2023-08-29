@@ -18,6 +18,7 @@ function createEntry(item: Record<string, string>, index: number): DataType {
       ] === "yes",
     plans: [],
     toExpiration: undefined,
+    creationDate: dayjs(item['Creation At'], "YYYY-MM-DD HH:mm").toDate(),
   };
 }
 

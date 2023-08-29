@@ -16,4 +16,5 @@ export interface DataType {
   mailingList: boolean;
   plans: ClassItem[];
   toExpiration?: ClassItem;
+  creationDate: Date;
 }

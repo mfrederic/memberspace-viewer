@@ -289,6 +289,12 @@ function handleLastPlan(lastPlan?: ClassItem) {
     <template #[`item.name`]="{ item }">
       {{ item.raw.lastName }} {{ item.raw.firstName }}
     </template>
+    <template #[`item.creationDate`]="{ item }">
+      {{ dayjs(item.raw.creationDate).fromNow() }}
+      <v-tooltip activator="parent">
+      {{ dayjs(item.raw.creationDate).format('MM-DD-YYYY') }}
+      </v-tooltip>
+    </template>
     <template #[`item.email`]="{ item }">
       <v-btn size="small" variant="plain" density="compact"
             :href="constructEmail(item.raw.email.toString())">{{ item.raw.email }}</v-btn>

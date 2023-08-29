@@ -10,6 +10,10 @@ export const headers = ref([
     key: 'email',
   },
   {
+    title: 'Creation',
+    key: 'creationDate',
+  },
+  {
     title: 'Dancer name',
     key: 'dancerName',
   },

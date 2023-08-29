@@ -52,6 +52,7 @@ export function mapDataTypeToDB(mapped: DataType[]): MappedForDB {
         mailingList: item.mailingList,
         address: item.address,
         dancerName: item.dancerName,
+        creationDate: item.creationDate,
       };
       accu.personList.push(person);
       if (item.plans.length > 0) {

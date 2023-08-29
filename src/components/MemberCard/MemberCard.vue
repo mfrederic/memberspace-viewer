@@ -56,35 +56,43 @@ onMounted(async () => {
       <v-container>
         <v-row>
           <v-col cols="4">Email:</v-col>
-          <v-col>
+          <v-col cols="8">
             <a :href="`mailto:${member.email}`">{{ member.email }}</a>
             <v-icon class="ml-2">{{ member.mailingList ? 'mdi-check-circle-outline' : 'mdi-close-circle-outline' }}</v-icon>
             <clipboard-copy :copy="member.email" />
           </v-col>
         </v-row>
         <v-row>
+          <v-col cols="4">Created on:</v-col>
+          <v-col cols="8">
+            {{ dayjs(member.creationDate).format('MM-DD-YYYY HH:mm') }} -
+            <b>{{ dayjs(member.creationDate).fromNow() }}</b>
+            <clipboard-copy :copy="dayjs(member.creationDate).format('MM-DD-YYYY HH:mm')" />
+          </v-col>
+        </v-row>
+        <v-row>
           <v-col col="4">Dancer name:</v-col>
-          <v-col>
+          <v-col cols="8">
             {{ member.dancerName }}
             <clipboard-copy :copy="member.dancerName" />
           </v-col>
         </v-row>
         <v-row>
           <v-col col="4">Adresse:</v-col>
-          <v-col>
+          <v-col cols="8">
             {{ member.address }}
             <clipboard-copy :copy="member.address" />
           </v-col>
         </v-row>
         <v-row>
           <v-col col="4">Timezone:</v-col>
-          <v-col>
+          <v-col cols="8">
             {{ member.timezone }}
             <clipboard-copy :copy="member.timezone" />
           </v-col>
         </v-row>
         <v-row>
-          <v-col>
+          <v-col cols="8">
             With
             <v-chip>{{ memberships.filter(m => dayjs(m.endDate).isAfter(dayjs())).length }}</v-chip>
             active membership(s)
