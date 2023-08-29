@@ -205,7 +205,6 @@ function updateSortBy(event: SortIem[]) {
   const expirationDateSort = event.find((e) => e.key === 'toExpiration.date');
   if (expirationDateSort) {
     sortBy.value = event.concat([{ key: 'toExpiration.status', order: 'desc' }]);
-    console.log(sortBy.value)
     return;
   }
   sortBy.value = event;
