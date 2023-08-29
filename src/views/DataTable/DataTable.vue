@@ -21,6 +21,11 @@ import { constructEmail } from "./utils";
 import { headers } from "./headers";
 dayjs.extend(relativeTime);
 
+interface SortIem {
+  key: string;
+  order: 'asc' | 'desc';
+}
+
 const membershipFilter = ref<"active" | "expired" | null>('expired');
 const classesFilter = ref<string[]>([]);
 const textFilter = ref<string>('');
@@ -86,7 +91,6 @@ async function init() {
   const personMembershipsList = await database.personMemberships.toArray();
 
   persons.value = dbToDataType(personsList, membershipsList, personMembershipsList);
-  setSorting("toExpiration", "desc");
   loading.value = false;
 }
 
@@ -113,87 +117,12 @@ const members = computed(() => {
       }
       return classes && membership;
     })
-  const sortKey = sorting.value.key as keyof DataType;
-  const sortOrder = sorting.value.order;
-  memberList
-    .sort((a, b) => {
-      if (sortOrder === "natural") {
-        return a._index - b._index;
-      }
-      function getSortingValue(plan?: ClassItem) {
-        if (!plan) {
-          return undefined;
-        }
-        if (plan.status === 'active' || plan.status === 'expired') {
-          return plan.date;
-        } else if (plan.status === 'canceled') {
-          return dayjs(plan.date).add(-99, 'year').toDate();  
-        }
-        return undefined;
-      }
-      const aValue = sortKey !== 'toExpiration'
-        ? a[sortKey]
-        : getSortingValue(a.toExpiration);
-      const bValue = sortKey !== 'toExpiration'
-        ? b[sortKey]
-        : getSortingValue(b.toExpiration);
-      if (!aValue) {
-        return 1;
-      }
-      if (!bValue) {
-        return -1;
-      }
-      if (aValue < bValue) {
-        return sortOrder === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortOrder === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
   return memberList;
 });
 
 const classes = computed(() => {
   return extractClasses(persons.value);
 });
-
-const sorting = ref({
-  key: "email",
-  order: "natural",
-});
-function sortOrderIcon(key: keyof DataType) {
-  if (sorting.value.key === key) {
-    switch (sorting.value.order) {
-      case "asc":
-        return "mdi-sort-ascending";
-      case "desc":
-        return "mdi-sort-descending";
-      default:
-        return "";
-    }
-  }
-  return "";
-}
-
-function setSorting(key: keyof DataType, dir?: "asc" | "desc" | "natural") {
-  if (!dir) {
-    if (sorting.value.key === key) {
-      sorting.value.order =
-        sorting.value.order === "asc"
-          ? "desc"
-          : sorting.value.order === "desc"
-            ? "natural"
-            : "asc";
-    } else {
-      sorting.value.key = key;
-      sorting.value.order = "asc";
-    }
-  } else {
-    sorting.value.key = key;
-    sorting.value.order = dir;
-  }
-}
 
 function filter(filter: Partial<Filters>) {
   if (filter.membership !== undefined) {
@@ -253,10 +182,10 @@ function handleLastPlan(lastPlan?: ClassItem) {
       label: dayjs(lastPlan.date).fromNow(),
       cssClass: 'date-passed'
     }
-  } else if(lastPlan.status === 'active - expires') {
+  } else if(lastPlan.status.includes('active -')) {
     return {
       label: dayjs().to(lastPlan.date),
-      cssClass: 'date-future'
+      cssClass: (lastPlan.status.includes('cancels')) ? 'date-canceled' : 'date-future',
     }
   } else if (lastPlan.status === 'active') {
     return {
@@ -270,6 +199,17 @@ function handleLastPlan(lastPlan?: ClassItem) {
     }
   }
 }
+
+const sortBy = ref<SortIem[]>([{ key: 'calories', order: 'asc' }]);
+function updateSortBy(event: SortIem[]) {
+  const expirationDateSort = event.find((e) => e.key === 'toExpiration.date');
+  if (expirationDateSort) {
+    sortBy.value = event.concat([{ key: 'toExpiration.status', order: 'desc' }]);
+    console.log(sortBy.value)
+    return;
+  }
+  sortBy.value = event;
+}
 </script>
 
 <template>
@@ -282,10 +222,12 @@ function handleLastPlan(lastPlan?: ClassItem) {
     <v-progress-linear indeterminate color="primary" :height="12"></v-progress-linear>
   </template>
   <v-data-table
+    v-model:sort-by="sortBy"
     items-per-page="25"
     :headers="headers"
     :items="members"
-    :search="textFilter">
+    :search="textFilter"
+    @update:sort-by="updateSortBy">
     <template #[`item.name`]="{ item }">
       {{ item.raw.lastName }} {{ item.raw.firstName }}
     </template>
@@ -296,11 +238,34 @@ function handleLastPlan(lastPlan?: ClassItem) {
       </v-tooltip>
     </template>
     <template #[`item.email`]="{ item }">
-      <v-btn size="small" variant="plain" density="compact"
-            :href="constructEmail(item.raw.email.toString())">{{ item.raw.email }}</v-btn>
+      {{  item.raw.email }}
+      <span class="float-right">
+        <v-btn
+          class="mr-2"
+          aria-label="Send email"
+          title="Send email"
+          size="small"
+          variant="plain"
+          density="compact"
+          icon="mdi-email"
+          :href="constructEmail(item.raw.email.toString())" />
+        <clipboard-copy
+          alt="Copy email"
+          size="small"
+          :copy="item.raw.email.toString()" />
+      </span>
     </template>
     <template #[`item.toExpiration.date`]="{ item }">
-      <b :class="handleLastPlan(item.raw.toExpiration).cssClass">{{ handleLastPlan(item.raw.toExpiration).label }}</b>
+      <b :class="handleLastPlan(item.raw.toExpiration).cssClass">
+        {{ handleLastPlan(item.raw.toExpiration).label }}
+        <template v-if="item.raw.toExpiration">
+          {{ item.raw.toExpiration.status.includes('cancels') ? '*' : '' }}
+          <v-tooltip v-if="item.raw.toExpiration.status.includes('cancels')"
+            activator="parent">
+            Is planned to be canceled on {{ dayjs(item.raw.toExpiration.date).format('MM-DD-YYYY') }}
+          </v-tooltip>
+        </template>
+      </b>
     </template>
     <template #[`item.actions`]="{ item }">
       <v-btn variant="plain" :to="userLink(item.raw)">
@@ -313,7 +278,7 @@ function handleLastPlan(lastPlan?: ClassItem) {
       @update:model-value="updateRoute($event)" 
       v-model="userView"
       width="auto"
-      min-width="450px">
+      min-width="650px">
     <RouterView />
   </v-dialog>
 </template>
@@ -360,6 +325,10 @@ tbody tr {
 
 .date-passed {
   color: red;
+}
+
+.date-canceled {
+  color: orange;
 }
 
 .date-future {

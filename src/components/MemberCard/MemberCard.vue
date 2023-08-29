@@ -28,12 +28,20 @@ onMounted(async () => {
       const membership = await database.memberships.get(pm.membershipId);
       return {
         ...pm,
-        isActive: dayjs(pm.endDate).isValid() ? dayjs(pm.endDate).isAfter(dayjs()) : false,
-        isValid: dayjs(pm.endDate).isValid(),
+        isActive: pm.endDate && dayjs(pm.endDate).isValid()
+          ? dayjs(pm.endDate).isAfter(dayjs())
+          : pm.status === 'active',
+        isValid: pm.endDate ? dayjs(pm.endDate).isValid() : pm.status === 'active',
         membership: membership as Membership,
       }
     }));
   memberships.value.sort((a, b) => {
+    if (!a.isActive) {
+      return -1;
+    }
+    if (!b.isActive) {
+      return 1;
+    }
     if (!dayjs(a.endDate).isValid()) {
       return 1;
     }

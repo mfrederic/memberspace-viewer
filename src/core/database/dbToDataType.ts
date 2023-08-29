@@ -17,6 +17,7 @@ export function dbToDataType(
         );
         if (membership) {
           if (!lastPlan || dayjs(lastPlan.date).isBefore(personMembership.endDate)) {
+            console.log('lastPlan', lastPlan, personMembership)
             lastPlan = {
               className: membership.name.toLowerCase(),
               status: membership.active ? personMembership.status : 'canceled',
