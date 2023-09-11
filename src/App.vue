@@ -20,7 +20,6 @@ const onDataLoaded = async (data: Record<string, string>[]) => {
 
   setTimeout(() => {
     loadData();
-    console.log("Data loaded");
     loading.value = false;
   }, 1000);
 };

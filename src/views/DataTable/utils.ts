@@ -1,3 +1,4 @@
+import type { ClassItem } from "@/core/interfaces/dataTypes";
 import dayjs from "dayjs";
 
 export function formatDate(date?: Date) {
@@ -48,4 +49,39 @@ export function yesNoChip(value: boolean) {
 
 export function constructEmail(email: string) {
   return `mailto:${email}`;
+}
+
+export function handleLastPlan(lastPlan?: ClassItem) {
+  if (!lastPlan) {
+    return {
+      label: '',
+      cssClass: '',
+    }
+  }
+  if (lastPlan.status === 'canceled') {
+    return {
+      label: 'canceled',
+      cssClass: '',
+    }
+  } else if (lastPlan.status === 'expired') {
+    return {
+      label: dayjs(lastPlan.date).fromNow(),
+      cssClass: 'date-passed'
+    }
+  } else if(lastPlan.status.includes('active -')) {
+    return {
+      label: dayjs().to(lastPlan.date),
+      cssClass: (lastPlan.status.includes('cancels')) ? 'date-canceled' : 'date-future',
+    }
+  } else if (lastPlan.status === 'active') {
+    return {
+      label: 'recurring',
+      cssClass: 'date-future',
+    }
+  } else {
+    return {
+      label: '',
+      cssClass: '',
+    }
+  }
 }

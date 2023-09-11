@@ -17,8 +17,10 @@ import { extractClasses } from "@/core/utils/mapper";
 import type { Filters } from "./DataFilters/DataFilters.vue";
 import DataFilters from "./DataFilters/DataFilters.vue";
 import { VDataTable } from 'vuetify/labs/VDataTable';
-import { constructEmail } from "./utils";
+import { constructEmail, handleLastPlan } from "./utils";
 import { headers } from "./headers";
+import ButtonBottomNav from "@/components/ButtonBottomNav.vue";
+import { copyToClipboard } from "@/core/utils/utils";
 dayjs.extend(relativeTime);
 
 interface SortIem {
@@ -165,41 +167,6 @@ function updateRoute(event: boolean) {
   }
 }
 
-function handleLastPlan(lastPlan?: ClassItem) {
-  if (!lastPlan) {
-    return {
-      label: '',
-      cssClass: '',
-    }
-  }
-  if (lastPlan.status === 'canceled') {
-    return {
-      label: 'canceled',
-      cssClass: '',
-    }
-  } else if (lastPlan.status === 'expired') {
-    return {
-      label: dayjs(lastPlan.date).fromNow(),
-      cssClass: 'date-passed'
-    }
-  } else if(lastPlan.status.includes('active -')) {
-    return {
-      label: dayjs().to(lastPlan.date),
-      cssClass: (lastPlan.status.includes('cancels')) ? 'date-canceled' : 'date-future',
-    }
-  } else if (lastPlan.status === 'active') {
-    return {
-      label: 'recurring',
-      cssClass: 'date-future',
-    }
-  } else {
-    return {
-      label: '',
-      cssClass: '',
-    }
-  }
-}
-
 const sortBy = ref<SortIem[]>([{ key: 'calories', order: 'asc' }]);
 function updateSortBy(event: SortIem[]) {
   const expirationDateSort = event.find((e) => e.key === 'toExpiration.date');
@@ -208,6 +175,15 @@ function updateSortBy(event: SortIem[]) {
     return;
   }
   sortBy.value = event;
+}
+
+const selected = ref<number[]>([]);
+function copySelectionAttrToClipboard(attr: Array<keyof DataType>) {
+  const value = selected.value
+    .map((itemIndex) => members.value.find((member) => member._index === itemIndex) as DataType)
+    .map((item) => attr.map((a) => item[a]).join(' '))
+    .join('\n');
+  copyToClipboard(value);
 }
 </script>
 
@@ -221,7 +197,10 @@ function updateSortBy(event: SortIem[]) {
     <v-progress-linear indeterminate color="primary" :height="12"></v-progress-linear>
   </template>
   <v-data-table
+    v-model="selected"
     v-model:sort-by="sortBy"
+    show-select
+    item-value="_index"
     items-per-page="25"
     :headers="headers"
     :items="members"
@@ -273,6 +252,28 @@ function updateSortBy(event: SortIem[]) {
       </v-btn>
     </template>
   </v-data-table>
+  <v-bottom-navigation v-if="selected.length > 0">
+    <button-bottom-nav
+      :label="selected.length > 1 ? 'Copy names' : 'Copy name'"
+      :icon="selected.length > 1 ? 'mdi-account-multiple' : 'mdi-account'"
+      :title="selected.length > 1 ? 'Copy names' : 'Copy name'"
+      @click="copySelectionAttrToClipboard(['firstName', 'lastName'])" />
+    <button-bottom-nav
+      :label="selected.length > 1 ? 'Copy emails' : 'Copy email'"
+      :icon="selected.length > 1 ? 'mdi-email-multiple' : 'mdi-email'"
+      :title="selected.length > 1 ? 'Copy emails' : 'Copy email'"
+      @click="copySelectionAttrToClipboard(['email'])" />
+    <button-bottom-nav
+      :label="selected.length > 1 ? 'Copy addresses' : 'Copy address'"
+      :icon="selected.length > 1 ? 'mdi-map-marker-multiple' : 'mdi-map-marker'"
+      :title="selected.length > 1 ? 'Copy addresses' : 'Copy address'"
+      @click="copySelectionAttrToClipboard(['address'])" />
+    <button-bottom-nav
+      :label="selected.length > 1 ? 'Copy dancers name' : 'Copy dancer name'"
+      :icon="selected.length > 1 ? 'mdi-account-multiple' : 'mdi-account'"
+      :title="selected.length > 1 ? 'Copy dancers name' : 'Copy dancer name'"
+      @click="copySelectionAttrToClipboard(['dancerName'])" />
+  </v-bottom-navigation>
   <v-dialog 
       @update:model-value="updateRoute($event)" 
       v-model="userView"
