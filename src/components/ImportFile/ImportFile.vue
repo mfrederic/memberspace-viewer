@@ -1,82 +1,88 @@
 <script setup lang="ts">
-import dayjs from "dayjs";
-import { ref, watch } from "vue";
+import { ref } from "vue";
+import type { Member } from "./membership.interface";
+import { parseCsv } from "./parser";
 
 const dateRegex =
   /([a-z]{3} [0-9]{2}  [0-9]{4} at [0-9]{2}:[0-9]{2} [APM]{2})/gim;
 
 const emit = defineEmits<{
-  (event: 'data:loaded', data: Record<string, string>[]): void;
+  (event: 'data:loaded', data: Member[]): void;
   (event: 'data:loading'): void;
 }>();
 const content = ref("");
 const snackbar = ref(false);
 const file = ref<File[] | undefined>(undefined);
 
-watch(content, (newVal) => {
-  emit("data:loaded", formatData(newVal));
-});
-
-function formatData(content: string): Record<string, string>[] {
-  const corrected = content
-    .replace(/("[^"]*")/gim, (match) =>
-      match.replace(/[\n,]/gim, " ").replace(/["]*/, ""),
-    )
-    .replace(dateRegex, (match) =>
-      dayjs(match, "MMM DD  YYYY [at] hh:mm A").format("YYYY-MM-DD HH:mm"),
-    );
-  const rawLines = corrected.split("\n");
-  const headers = rawLines.shift()?.split(",") ?? [];
-  const lines: string[][] = [];
-
-  let current: string[] = [];
-  rawLines.forEach((line) => {
-    const values = line.split(",");
-    if (current.length !== headers.length) {
-      current.push(...values);
-    }
-    if (current.length >= headers.length) {
-      lines.push(current);
-      current = [];
-    }
-  });
-
-  return lines.map((line) => {
-    const obj: Record<string, string> = {};
-    line.forEach((value, index) => {
-      obj[headers[index]] = value.replace('"', "");
-    });
-    return obj;
-  });
+function formatData(content: string): Member[] {
+  return parseCsv(content);
 }
 
 function readfile() {
   emit('data:loading');
-  const input = document.getElementById("file-input");
-  if (!input) return;
-  const file = (input as any).files[0];
-  if (!file) return;
+
+  const input = document.getElementById("file-input") as HTMLInputElement;
+  if (!input) {
+    console.error('File input element not found');
+    return;
+  }
+
+  const selectedFile = input.files?.[0];
+  if (!selectedFile) {
+    console.error('No file selected');
+    return;
+  }
+
   const reader = new FileReader();
-  reader.onerror;
-  reader.onload = (e) => {
-    content.value = e.target?.result as string;
+  
+  reader.onerror = (error) => {
+    console.error('Error reading file:', error);
+    snackbar.value = false;
   };
-  reader.readAsText(file);
-  snackbar.value = true;
-  file.value = undefined;
+
+  reader.onload = (e) => {
+    try {
+      const result = e.target?.result;
+      if (typeof result !== 'string') {
+        throw new Error('Invalid file content');
+      }
+      content.value = result;
+      snackbar.value = true;
+      emit("data:loaded", parseCsv(result));
+    } catch (err) {
+      console.error('Error processing file:', err);
+      snackbar.value = false;
+    }
+  };
+
+  try {
+    reader.readAsText(selectedFile);
+    file.value = undefined;
+  } catch (err) {
+    console.error('Error starting file read:', err);
+    snackbar.value = false;
+  }
+}
+
+function handleFileChange(files: File[] | undefined) {
+  file.value = files;
+  if (!files?.length) {
+    content.value = "";
+  }
 }
 </script>
 
 <template>
   <v-file-input
     :model-value="file"
-    accept=".csv"
+    accept=".csv,text/csv"
     label="Memberspace CSV file"
     id="file-input"
     variant="solo"
     density="compact"
+    @change="handleFileChange"
   />
-  <v-btn color="primary" @click="readfile">Read File</v-btn>
+  <v-btn color="primary" @click="readfile" :disabled="!file">Read File</v-btn>
 
   <v-snackbar v-model="snackbar">
     Membership file loaded

@@ -2,12 +2,18 @@ import { ref } from "vue";
 
 export const headers = ref([
   {
-    title: 'Name',
+    title: 'Name (approved)',
     key: 'name',
   },
   {
-    title: 'Email',
+    key: 'status',
+  },
+  {
+    title: 'Email (mailing list)',
     key: 'email',
+  },
+  {
+    key: 'mailingList',
   },
   {
     title: 'Creation',
@@ -24,13 +30,19 @@ export const headers = ref([
   {
     title: 'Timezone',
     key: 'timezone',
+    maxWidth: '120px',
+  },
+  {
+    title: 'Plans',
+    key: 'plans.length',
+    maxWidth: '120px',
   },
   {
     title: 'Last plan',
-    key: 'toExpiration.date',
+    key: 'toExpiration.status',
   },
   {
     title: '',
-    key: 'actions'
+    key: 'actions',
   }
 ]);

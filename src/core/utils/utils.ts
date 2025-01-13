@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs from "@/utils/date";
 
 export function elapsed(date?: Date) {
   if (!date || !dayjs(date).isValid()) {
@@ -6,8 +6,8 @@ export function elapsed(date?: Date) {
   }
   const today = new Date();
   return dayjs(date).isBefore(today)
-    ? { label: dayjs(date).fromNow(), cssClass: "date-passed" }
-    : { label: dayjs().to(date), cssClass: "date-future" };
+    ? { label: dayjs(date).fromNow(), cssClass: "text-red-accent-4" }
+    : { label: dayjs().to(date), cssClass: "text-green-accent-4" };
 }
 
 export async function copyToClipboard(text: string) {

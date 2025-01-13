@@ -5,5 +5,6 @@ export interface MembershipItem extends Membership {
   members: number;
   activeCount: number;
   inactiveCount: number;
+  recurringCount: number;
   personsId: number[];
 }

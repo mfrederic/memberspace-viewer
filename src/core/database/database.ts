@@ -8,11 +8,11 @@ export class DatabaseService extends Dexie {
 
   constructor() {
     super("memberspace_db");
-    this.version(2).stores({
+    this.version(3).stores({
       memberships: "++id, name, active",
       persons:
         "++id, [firstname+lastname], email, timezone, mailingList, dancerName, creationDate",
-      personMemberships: "[personId+membershipId]",
+      personMemberships: "[personId+membershipId], personId, membershipId",
     });
   }
 }

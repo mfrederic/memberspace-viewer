@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { database, type Membership, type Person, type PersonsMemberships } from '@/core/database';
-import { elapsed } from '@/core/utils/utils';
-import dayjs from 'dayjs';
-import { ref } from 'vue';
-import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import ClipboardCopy from '../ClipboardCopy/ClipboardCopy.vue';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { database, type Membership, type Person, type PersonsMemberships } from "@/core/database";
+import { elapsed } from "@/core/utils/utils";
+import dayjs from "@/utils/date";
+import ClipboardCopy from "@/components/ClipboardCopy/ClipboardCopy.vue";
 
 type MembershipData = PersonsMemberships & {
   membership: Membership;
@@ -121,18 +120,26 @@ onMounted(async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="membership in memberships" :key="membership.membershipId" :class="membership.isActive ? 'active' : ''">
+          <tr
+            v-for="membership in memberships"
+            :key="membership.membershipId"
+            :class="{
+              'bg-orange-lighten-4': !membership.isActive,
+              'bg-green-lighten-4': membership.isActive,
+            }"
+          >
             <td>{{ membership.membership.name }}</td>
-            <td>{{ membership.isValid ? dayjs(membership.endDate).format('YYYY-MM-DD') : '' }}</td>
-            <td>{{ membership.isValid ? elapsed(membership.endDate).label : '' }}</td>
+            <template v-if="membership.isValid">
+              <td>{{ membership.status !== 'active' ? dayjs(membership.endDate).format('YYYY-MM-DD') : 'recurring' }}</td>
+              <td :class="elapsed(membership.endDate).cssClass">{{ elapsed(membership.endDate).label }}</td>
+            </template>
+            <template v-else>
+              <td></td>
+              <td></td>
+            </template>
           </tr>
         </tbody>
       </v-table>
     </v-card-text>
   </v-card>
 </template>
-<style scoped>
-.active {
-  background-color: #e8fdcf;
-}
-</style>

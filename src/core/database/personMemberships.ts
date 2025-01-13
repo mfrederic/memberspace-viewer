@@ -1,6 +1,8 @@
+import type { PlanStatus } from "@/components/ImportFile/membership.interface";
+
 export interface PersonsMemberships {
   personId: number;
   membershipId: number;
-  status: string;
+  status: PlanStatus;
   endDate?: Date;
 }

@@ -1,5 +1,5 @@
-import type { ClassItem } from "@/core/interfaces/dataTypes";
-import dayjs from "dayjs";
+import type { PlanEntity } from "@/core/interfaces/dataTypes";
+import dayjs from "@/utils/date";
 
 export function formatDate(date?: Date) {
   if (!date || !dayjs(date).isValid()) {
@@ -51,37 +51,38 @@ export function constructEmail(email: string) {
   return `mailto:${email}`;
 }
 
-export function handleLastPlan(lastPlan?: ClassItem) {
+export function handleLastPlan(lastPlan?: PlanEntity) {
   if (!lastPlan) {
     return {
       label: '',
       cssClass: '',
     }
   }
-  if (lastPlan.status === 'canceled') {
-    return {
-      label: 'canceled',
-      cssClass: '',
-    }
-  } else if (lastPlan.status === 'expired') {
-    return {
-      label: dayjs(lastPlan.date).fromNow(),
-      cssClass: 'date-passed'
-    }
-  } else if(lastPlan.status.includes('active -')) {
-    return {
-      label: dayjs().to(lastPlan.date),
-      cssClass: (lastPlan.status.includes('cancels')) ? 'date-canceled' : 'date-future',
-    }
-  } else if (lastPlan.status === 'active') {
-    return {
-      label: 'recurring',
-      cssClass: 'date-future',
-    }
-  } else {
-    return {
-      label: '',
-      cssClass: '',
-    }
+  switch (lastPlan.status) {
+    case 'canceled':
+      return {
+        label: 'canceled',
+        cssClass: 'text-yellow-darken-2',
+      }
+    case 'expired':
+      return {
+        label: dayjs(lastPlan.date).fromNow(),
+        cssClass: 'text-red-accent-4'
+      }
+    case 'willCancelOn':
+      return {
+        label: dayjs().to(lastPlan.date),
+        cssClass: (lastPlan.status.includes('cancels')) ? 'text-yellow-darken-2' : 'text-green-accent-4',
+      }
+    case 'active':
+      return {
+        label: 'recurring',
+        cssClass: 'text-green-accent-4',
+      }
+    default:
+      return {
+        label: '',
+        cssClass: '',
+      }
   }
 }

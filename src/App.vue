@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import ImportFile from './components/ImportFile/ImportFile.vue';
-import { database } from './core/database/database';
-import { clearData as clearDataMsg, loadData } from './core/broadcast';
-import { csvToDataType } from './components/ImportFile/dataMapper';
-import { mapDataTypeToDB } from './components/ImportFile/contentMapper';
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import ImportFile from "./components/ImportFile/ImportFile.vue";
+import { database } from "./core/database/database";
+import { clearData as clearDataMsg, loadData } from "./core/broadcast";
+import { mapDataTypeToDB } from "./core/database/contentMapper";
+import type { Member } from "./components/ImportFile/membership.interface";
+import type { RouteName } from "./core/routes";
+
+const route = useRoute();
+
+const pageName = computed(() => route.name as RouteName);
 
 const drawer = ref<boolean>(false);
 const loading = ref<boolean>(false);
 
-const onDataLoaded = async (data: Record<string, string>[]) => {
-  const content = csvToDataType(data);
-  const mapped = mapDataTypeToDB(content);
+const onDataLoaded = async (data: Member[]) => {
+  const mapped = mapDataTypeToDB(data);
   await clearData();
 
   await database.persons.bulkAdd(mapped.personList);
@@ -41,7 +46,7 @@ function clearData() {
         variant="text"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-app-bar-title>Memberspace members</v-app-bar-title>
+      <v-app-bar-title>{{ pageName }}</v-app-bar-title>
       <template v-slot:append>
         <v-menu>
           <template v-slot:activator="{ props }">
@@ -67,7 +72,7 @@ function clearData() {
         <v-list-item
           prepend-icon="mdi-account-group"
           title="Memberships"
-          to="memberships"
+          to="/memberships"
         ></v-list-item>
       </v-list>
     </v-navigation-drawer>

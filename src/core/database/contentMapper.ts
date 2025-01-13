@@ -1,5 +1,5 @@
+import type { Member } from "@/components/ImportFile/membership.interface";
 import type { Membership, Person, PersonsMemberships } from "@/core/database";
-import type { DataType } from "@/core/interfaces/dataTypes";
 
 export interface MappedForDB {
   personList: Person[];
@@ -7,9 +7,11 @@ export interface MappedForDB {
   membershipsList: Membership[];
 }
 
-export function mapDataTypeToDB(mapped: DataType[]): MappedForDB {
+type MembershipMap = Map<string, { count: number; id: number }>;
+
+function mapMembership(mapped: Member[]): MembershipMap {
   let id = 1;
-  const memberships = mapped.reduce((accu, item) => {
+  return mapped.reduce((accu, item) => {
     if (item.plans.length > 0) {
       item.plans.forEach((plan) => {
         const membership = accu.get(plan.className);
@@ -25,9 +27,11 @@ export function mapDataTypeToDB(mapped: DataType[]): MappedForDB {
       });
     }
     return accu;
-  }, new Map<string, { count: number; id: number }>());
+  }, new Map<string, { count: number; id: number }>())
+}
 
-  const membershipsList = Array.from(memberships.entries())
+function mapMembershipList(memberships: MembershipMap): Membership[] {
+  return Array.from(memberships.entries())
     .map<Membership>(
       ([key, value]) => {
         const active = key.toLowerCase().indexOf('old') === -1;
@@ -37,9 +41,13 @@ export function mapDataTypeToDB(mapped: DataType[]): MappedForDB {
           name: key,
         }
       },
-    );
+    )
+}
 
-  id = 1;
+export function mapDataTypeToDB(mapped: Member[]): MappedForDB {
+  const memberships = mapMembership(mapped);
+  const membershipsList = mapMembershipList(memberships);
+
   const mappedData = mapped.reduce(
     (accu, item, index) => {
       const person = {
@@ -52,23 +60,25 @@ export function mapDataTypeToDB(mapped: DataType[]): MappedForDB {
         mailingList: item.mailingList,
         address: item.address,
         dancerName: item.dancerName,
-        creationDate: item.creationDate,
+        creationDate: item.creationAt,
       };
       accu.personList.push(person);
-      if (item.plans.length > 0) {
-        item.plans.forEach((plan) => {
-          const membership = memberships.get(plan.className);
-          if (membership) {
-            accu.personMembershipList.push({
-              personId: person.id,
-              membershipId: membership.id,
-              status: plan.status,
-              endDate: plan.date,
-            });
-            id++;
-          }
-        });
+
+      if (item.plans.length <= 0) {
+        return accu;
       }
+
+      item.plans.forEach((plan) => {
+        const membership = memberships.get(plan.className);
+        if (membership) {
+          accu.personMembershipList.push({
+            personId: person.id,
+            membershipId: membership.id,
+            status: plan.status,
+            endDate: plan.date,
+          });
+        }
+      });
       return accu;
     },
     {
