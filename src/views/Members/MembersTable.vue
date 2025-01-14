@@ -112,7 +112,7 @@ function userLink(item: MemberEntity) {
           density="compact">{{ item.inactivePlans }}</v-chip>
       </template>
     </template>
-    <template #item.toExpiration.status="{ item }">
+    <template #item.toExpiration.date="{ item }">
       <b :class="handleLastPlan(item.toExpiration).cssClass">
         {{ handleLastPlan(item.toExpiration).label }}
         <template v-if="item.toExpiration">

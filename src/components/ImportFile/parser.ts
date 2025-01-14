@@ -10,7 +10,7 @@ function parseStatus(raw: string): {
   const rawStatus = raw.toLowerCase() as PlanStatus;
   let status: PlanStatus = rawStatus;
   let date: Date | undefined;
-  if (rawStatus.includes("cancels on")) {
+  if (rawStatus.includes("cancels on") || rawStatus.includes("expires on")) {
     status = "willCancelOn";
     date = parseInputDate(raw, true);
   }

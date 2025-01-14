@@ -39,7 +39,7 @@ export const headers = ref([
   },
   {
     title: 'Last plan',
-    key: 'toExpiration.status',
+    key: 'toExpiration.date',
   },
   {
     title: '',

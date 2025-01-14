@@ -1,65 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
-import { database, type Membership, type Person, type PersonsMemberships } from "@/core/database";
 import { elapsed } from "@/core/utils/utils";
 import dayjs from "@/utils/date";
 import ClipboardCopy from "@/components/ClipboardCopy/ClipboardCopy.vue";
-
-type MembershipData = PersonsMemberships & {
-  membership: Membership;
-  isActive: boolean;
-  isValid: boolean;
-}
+import { usePerson, usePersonMembershipsByPerson } from "@/hooks/usePerson";
 
 const route = useRoute();
-const member = ref<Person>();
-const memberships = ref<MembershipData[]>();
-const loading = ref<boolean>(true);
+const personId = computed(() => parseInt(route.params.id as string));
 
-onMounted(async () => {
-  loading.value = true;
-  const personId = parseInt(route.params.id as string);
-  member.value = await database.persons.get(personId);
-  const personMemberships = await database.personMemberships.where('personId').equals(personId).toArray();
-  memberships.value = await Promise.all(personMemberships
-    .map<Promise<MembershipData>>(async (pm) => {
-      const membership = await database.memberships.get(pm.membershipId);
-      return {
-        ...pm,
-        isActive: pm.endDate && dayjs(pm.endDate).isValid()
-          ? dayjs(pm.endDate).isAfter(dayjs())
-          : pm.status === 'active',
-        isValid: pm.endDate ? dayjs(pm.endDate).isValid() : pm.status === 'active',
-        membership: membership as Membership,
-      }
-    }));
-  memberships.value.sort((a, b) => {
-    if (!a.isActive) {
-      return 1;
-    }
-    if (!b.isActive) {
-      return -1;
-    }
-    if (!dayjs(a.endDate).isValid()) {
-      return 1;
-    }
-    if (!dayjs(b.endDate).isValid()) {
-      return -1;
-    }
-    return dayjs(b.endDate).diff(dayjs(a.endDate))
-  });
-  loading.value = false;
-});
+const { member, loading: memberLoading } = usePerson(personId);
+const { memberships, loading: membershipsLoading } = usePersonMembershipsByPerson(personId);
 </script>
 <template>
-  <v-card v-if="member && memberships">
-    <v-card-title>
+  <v-card :loading="memberLoading || membershipsLoading">
+    <v-card-title v-if="member">
       Member: {{ member.firstname }} {{ member.lastname }}
       <v-icon>{{ member.status === 'approved' ? 'mdi-check-circle-outline' : 'mdi-close-circle-outline' }}</v-icon>
       <clipboard-copy :copy="`${member.firstname} ${member.lastname}`" />
     </v-card-title>
-    <v-card-text>
+    <v-card-text v-if="member">
       <v-container>
         <v-row>
           <v-col cols="4">Email:</v-col>
@@ -98,7 +58,7 @@ onMounted(async () => {
             <clipboard-copy :copy="member.timezone" />
           </v-col>
         </v-row>
-        <v-row>
+        <v-row v-if="memberships">
           <v-col cols="8">
             With
             <v-chip>{{ memberships.filter(m => dayjs(m.endDate).isAfter(dayjs())).length }}</v-chip>
@@ -107,10 +67,10 @@ onMounted(async () => {
         </v-row>
       </v-container>
     </v-card-text>
-    <v-card-title v-if="memberships.length > 0">
+    <v-card-title v-if="memberships && memberships.length > 0">
       Memberships
     </v-card-title>
-    <v-card-text v-if="memberships.length > 0">
+    <v-card-text v-if="memberships && memberships.length > 0">
       <v-table>
         <thead>
           <tr>

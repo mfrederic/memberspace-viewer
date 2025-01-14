@@ -64,6 +64,11 @@ export function handleLastPlan(lastPlan?: PlanEntity) {
         label: 'canceled',
         cssClass: 'text-yellow-darken-2',
       }
+    case 'incomplete':
+      return {
+        label: 'incomplete',
+        cssClass: 'text-yellow-darken-2',
+      }
     case 'expired':
       return {
         label: dayjs(lastPlan.date).fromNow(),

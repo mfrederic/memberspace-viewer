@@ -53,10 +53,11 @@ function hideNoMembershipFiltering(value: boolean | null) {
 }
 
 function resetFilters() {
-  emits("filter", { membership: null, selectedClasses: [] });
+  emits("filter", { membership: null, selectedClasses: [], hideNoMembership: false, text: '' });
   membershipValue.value = null;
   classesValue.value = [];
   textValue.value = '';
+  hideNoMembership.value = false;
 }
 </script>
 

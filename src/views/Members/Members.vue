@@ -15,15 +15,21 @@ import type { Subscription } from "rxjs";
 import type { MemberEntity } from "@/core/interfaces/dataTypes";
 import type { Filters } from "./DataFilters/DataFilters.vue";
 import type { PlanStatus } from "@/components/ImportFile/membership.interface";
+import { usePersons } from "@/hooks/usePerson";
+import { useMemberships } from "@/hooks/useMembership";
+import { usePersonMemberships } from "@/hooks/usePersonMembership";
+
+type MembershipFilter = "active" | "expired" | null;
 
 const route = useRoute();
 const router = useRouter();
 
-const membershipFilter = ref<"active" | "expired" | null>(route.query.membership as "active" | "expired" | null ?? 'expired');
+const membershipFilter = ref<MembershipFilter>(route.query.membership as MembershipFilter ?? null);
 const classesFilter = ref<string[]>(route.query.classes as string[] ?? []);
 const userView = ref<boolean>(route.params.id !== undefined);
-const textFilter = ref<string>('');
+const textFilter = ref<string>(route.query.text as string ?? '');
 const hideNoMembership = ref<boolean>(!!route.query.hideNoMembership);
+
 const persons = ref<MemberEntity[]>([]);
 const loading = ref<boolean>(false);
 const selected = ref<number[]>([]);
@@ -77,7 +83,8 @@ const members = computed(() => {
           || (member.toExpiration.date !== undefined && dayjs(member.toExpiration.date).isAfter(dayjs())));
     } else {
       membership =
-        !member.toExpiration || dayjs(member.toExpiration?.date).isBefore(dayjs()) || member.toExpiration.status === 'active';
+        member.toExpiration?.status !== 'active'
+        && dayjs(member.toExpiration?.date).isBefore(dayjs());
     }
     return membership;
   }
