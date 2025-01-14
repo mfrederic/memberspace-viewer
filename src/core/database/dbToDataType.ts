@@ -1,6 +1,6 @@
 import dayjs from "@/utils/date";
-import type { Membership, Person, PersonsMemberships } from "../database";
-import type { PlanEntity, MemberEntity } from "../interfaces/dataTypes";
+import type { Membership, Person, PersonsMemberships } from "@/core/database";
+import type { PlanEntity, MemberEntity } from "@/core/interfaces/dataTypes";
 import type { MemberStatus, PlanStatus } from "@/components/ImportFile/membership.interface";
 
 function getMembership(

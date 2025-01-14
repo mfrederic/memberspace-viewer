@@ -1,5 +1,5 @@
-import type { Membership, Person, PersonsMemberships } from ".";
 import Dexie, { type Table } from "dexie";
+import type { Membership, Person, PersonsMemberships } from ".";
 
 export class DatabaseService extends Dexie {
   memberships!: Table<Membership>;
