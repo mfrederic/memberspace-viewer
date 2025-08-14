@@ -31,5 +31,5 @@ jobs:
           username: ${{ secrets.HOSTINGER_USERNAME }}
           password: ${{ secrets.HOSTINGER_PASSWORD }}
           local-dir: ./dist/
-          server-dir: /public_html/membership/
+          server-dir: public_html/
           log-level: ${{ vars.HOSTINGER_LOG_LEVEL }}
